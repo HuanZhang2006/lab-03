@@ -33,9 +33,9 @@ fun CityListScreen(
     onUpdateCity: (City, City) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var newCityName by remember { mutableStateOf("") }
-    var newProvinceName by remember { mutableStateOf("") }
-    var showAddCityFields by remember { mutableStateOf(false) }
+    var cityName by remember { mutableStateOf("") }
+    var provinceName by remember { mutableStateOf("") }
+    var showFields by remember { mutableStateOf(false) }
     var selectedCity by remember { mutableStateOf<City?>(null) }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -46,21 +46,24 @@ fun CityListScreen(
             FloatingActionButton(
                 modifier = Modifier.padding(16.dp),
                 onClick = {
-                    showAddCityFields = !showAddCityFields
+                    showFields = !showFields
+                    selectedCity = null
+                    cityName = ""
+                    provinceName = ""
                 }
             ) {
                 Text("+")
             }
         }
-        if (showAddCityFields) {
+        if (showFields) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
                 OutlinedTextField(
-                    value = newCityName,
-                    onValueChange = { newCityName = it },
+                    value = cityName,
+                    onValueChange = { cityName = it },
                     label = { Text("City") },
                     modifier = Modifier.weight(1f)
                 )
@@ -68,8 +71,8 @@ fun CityListScreen(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedTextField(
-                    value = newProvinceName,
-                    onValueChange = { newProvinceName = it },
+                    value = provinceName,
+                    onValueChange = { provinceName = it },
                     label = { Text("Province") },
                     modifier = Modifier.weight(1f)
                 )
@@ -79,20 +82,24 @@ fun CityListScreen(
                 Button(
                     modifier = Modifier.padding(vertical = 12.dp),
                     onClick = {
-                        if (newCityName.isNotBlank() && newProvinceName.isNotBlank()) {
-                            onAddCity(
-                                City(
-                                    name = newCityName,
-                                    province = newProvinceName
-                                )
-                            )
-                            newCityName = ""
-                            newProvinceName = ""
-                            showAddCityFields = false
+                        if (cityName.isNotBlank() && provinceName.isNotBlank()) {
+                            val newCity = City(name = cityName, province = provinceName)
+                            if(selectedCity != null){
+                                onUpdateCity(selectedCity!!, newCity)
+                            } else {
+                                onAddCity(newCity)
+                            }
+                            cityName = ""
+                            provinceName = ""
+                            showFields = false
+                            selectedCity = null
                         }
                     }
                 ) {
-                    Text("Add City")
+                    if(selectedCity != null)
+                        Text("Update City")
+                    else
+                        Text("Add City")
                 }
 
             }
@@ -117,13 +124,16 @@ fun CityListScreen(
 }
 
 @Composable
-fun CityRow(city: City) {
+fun CityRow(
+    city: City,
+    onCityClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp)
             .clickable {
-                // Handle click event here
+                onCityClick()
             }
     ) {
         Text(
@@ -150,7 +160,8 @@ fun CityListScreenPreview() {
                 City("Vancouver", "BC"),
                 City("Calgary", "AB")
             ),
-            onAddCity = {}
+            onAddCity = {},
+            onUpdateCity = { _, _ -> }
         )
     }
 }
